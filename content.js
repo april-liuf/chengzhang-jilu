@@ -36,7 +36,8 @@ const POINTS = {
   finishHomework: 1,  // 每天完成作业
   germanReview: 2,    // 每天德语单词复习
   examPerfect: 5,     // 考试全对（+5，单项高分项）
-  weeklyReview: 5     // 每周完成周看板复盘
+  weeklyReview: 5,    // 每周完成周看板复盘
+  chore: 1            // 劳动：每项劳动 +1 分（c.chore.list 数量 × 1）
 };
 
 /* ============ 睡觉打分（自选入睡/起床时间 → 算时长 → 综合评分） ============
@@ -69,7 +70,8 @@ const BADGES = [
   { id:"english", icon:"📚", name:"英语阅读侠", tiers:[10,30,60],  src:"englishDays", label:"英语阅读天数" },
   { id:"german",  icon:"🇩🇪", name:"德语达人",  tiers:[20,50,100], src:"germanWords", label:"已学德语词" },
   { id:"eat",     icon:"🍎", name:"健康饮食家", tiers:[14,30,60],  src:"eatDays",     label:"好好吃饭天数" },
-  { id:"exam",    icon:"🏅", name:"全对王",    tiers:[1,3,10],    src:"examCount",   label:"考试全对次数" }
+  { id:"exam",    icon:"🏅", name:"全对王",    tiers:[1,3,10],    src:"examCount",   label:"考试全对次数" },
+  { id:"chore",   icon:"🧹", name:"劳动小当家", tiers:[10,30,60],  src:"choreCount",  label:"累计劳动项数" }
 ];
 
 /* 积分兑换（改文字即可） */
@@ -347,6 +349,28 @@ const SPORT = {
     { id:"other",   icon:"🤸", name:"其他运动" }
   ]
 };
+
+/* ============ 劳动小能手（每项劳动 +1 分） ============
+   说明：小孩子能在家做的劳动，点选即打卡，每项 +1 分（c.chore.list 数量 × POINTS.chore）。
+   想加项目，往这里追加一行 { id, icon, name } 即可。 */
+const CHORES = [
+  { id:"tidy_desk",    icon:"📚", name:"整理书桌" },
+  { id:"make_bed",     icon:"🛏", name:"整理床铺" },
+  { id:"sweep",        icon:"🧹", name:"扫地" },
+  { id:"mop",          icon:"🧽", name:"拖地" },
+  { id:"wash_dishes",  icon:"🍽", name:"洗碗" },
+  { id:"take_out",     icon:"🗑", name:"倒垃圾" },
+  { id:"fold_clothes", icon:"👕", name:"叠衣服" },
+  { id:"wipe_table",   icon:"🪣", name:"擦桌子" },
+  { id:"water_plant",  icon:"🪴", name:"浇花" },
+  { id:"feed_pet",     icon:"🐾", name:"喂宠物" },
+  { id:"put_toys",     icon:"🧸", name:"收拾玩具" },
+  { id:"set_table",    icon:"🍴", name:"摆碗筷" },
+  { id:"wash_sock",    icon:"🧦", name:"洗自己的袜子" },
+  { id:"get_delivery", icon:"📦", name:"取快递/拿外卖" },
+  { id:"help_cook",    icon:"🍳", name:"帮厨（摘菜/打蛋）" },
+  { id:"other_chore",  icon:"✨", name:"其他劳动" }
+];
 
 /* ============ 时间小管家 ============ */
 const SCHEDULE = [
