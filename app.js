@@ -56,7 +56,7 @@ function dayPoints(c){
   let p=0;
   if(eatDone(c)) p+=POINTS.eatWell;
   if(c.eat && c.eat.waterOk) p+=POINTS.drinkWater;
-  if(c.sleep && c.sleep.ok) p+=POINTS.sleepBefore21;
+  const sc=sleepCategory(c); if(sc) p+=sc.pts;
   if(c.move && c.move.done && (c.move.rope||0)>=DAILY_GOALS.jumpRope) p+=POINTS.jumpRope50;
   if(c.move && c.move.sports && c.move.sports.length) p+=POINTS.moveAny;
   if(c.study && c.study.english) p+=POINTS.englishRead15;
@@ -68,9 +68,39 @@ function dayPoints(c){
 function totalPoints(){ let t=0; for(const k in DB.checkins) t+=dayPoints(DB.checkins[k]); if(DB.weekly) for(const k in DB.weekly) if(DB.weekly[k].reviewed) t+=POINTS.weeklyReview; return t; }
 function sleepStreak(){
   let streak=0; let cur=todayStr();
-  if(!(DB.checkins[cur] && DB.checkins[cur].sleep && DB.checkins[cur].sleep.ok)) cur=addDays(cur,-1);
-  while(DB.checkins[cur] && DB.checkins[cur].sleep && DB.checkins[cur].sleep.ok){ streak++; cur=addDays(cur,-1); }
+  if(!(DB.checkins[cur] && DB.checkins[cur].sleep && DB.checkins[cur].sleep.done)) cur=addDays(cur,-1);
+  while(DB.checkins[cur] && DB.checkins[cur].sleep && DB.checkins[cur].sleep.done){ streak++; cur=addDays(cur,-1); }
   return streak;
+}
+function sleepMinutes(bed, wake){
+  if(!bed||!wake) return null;
+  const p=s=>{ const a=(s||"").split(":").map(Number); return (a[0]||0)*60+(a[1]||0); };
+  const b=p(bed), w=p(wake); if(isNaN(b)||isNaN(w)) return null;
+  return ((w-b)%1440+1440)%1440;
+}
+function sleepCategory(c){
+  if(!c||!c.sleep) return null;
+  const d=sleepMinutes(c.sleep.bed, c.sleep.wake); if(d===null) return null;
+  const early = (c.sleep.bed||"23:59") <= SLEEP.earlyCutoff;   // "HH:MM" 字符串比较即可
+  const enough = d/60 >= SLEEP.goalHours;
+  if(early && enough) return {key:"earlyEnough", pts:SLEEP.scores.earlyEnough, label:"早睡 + 睡够", desc:"科学作息，满分！"};
+  if(early && !enough) return {key:"earlyShort", pts:SLEEP.scores.earlyShort, label:"早睡但时间短", desc:"睡得早，但可以再多睡会儿"};
+  if(!early && enough) return {key:"lateEnough", pts:SLEEP.scores.lateEnough, label:"晚睡但睡够", desc:"睡得久，但晚了一点"};
+  return {key:"lateShort", pts:SLEEP.scores.lateShort, label:"晚睡且时间短", desc:"要加油，早点上床多睡会儿"};
+}
+function updateSleepInfo(c){
+  const info=document.getElementById("sleepInfo");
+  const score=document.getElementById("sleepScore");
+  const cat=c&&sleepCategory(c);
+  if(info){
+    const d=sleepMinutes(c&&c.sleep&&c.sleep.bed, c&&c.sleep&&c.sleep.wake);
+    if(d===null){ info.textContent="填写入睡和起床时间，自动算睡眠时长"; }
+    else {
+      const h=Math.floor(d/60), m=d%60;
+      info.innerHTML=`😴 睡眠时长 <b>${h} 小时 ${m} 分</b> · 科学目标 ≥ ${SLEEP.goalHours} 小时<br>${cat.label}：${cat.desc}（<b>${cat.pts} 分</b>）`;
+    }
+  }
+  if(score){ score.textContent = cat ? ("🌟 "+cat.pts+" 分") : ""; }
 }
 function countDays(pred){ let n=0; for(const k in DB.checkins) if(pred(DB.checkins[k])) n++; return n; }
 function moveStreak(){
@@ -179,8 +209,9 @@ function renderToday(dateStr){
           </div>
         </div>
         <div class="thing sleep">
-          <label class="thing-top"><input type="checkbox" data-k="sleep.done" ${c.sleep.done?"checked":""}> <span>😴 早点睡觉</span></label>
-          <div class="thing-detail">昨晚睡 <input type="time" data-k="sleep.bed" value="${c.sleep.bed||"21:00"}"> · 今早起 <input type="time" data-k="sleep.wake" value="${c.sleep.wake||"07:00"}"></div>
+          <div class="thing-top"><span>😴 好好睡觉</span><span class="bf-count" id="sleepScore"></span></div>
+          <div class="thing-detail">🛏 昨晚入睡 <input type="time" data-k="sleep.bed" value="${c.sleep.bed||"21:00"}"> · ⏰ 今早起床 <input type="time" data-k="sleep.wake" value="${c.sleep.wake||"07:00"}"></div>
+          <div class="bf-tip" id="sleepInfo"></div>
         </div>
         <div class="thing move">
           <div class="thing-top"><span>🏃 动一动</span><span class="bf-count" id="sportCount"></span></div>
@@ -248,7 +279,7 @@ function renderToday(dateStr){
       const k=inp.dataset.k; const [grp,key]=k.split(".");
       if(inp.type==="checkbox") c2[grp][key]=inp.checked;
       else c2[grp][key]= inp.type==="number" ? (+inp.value||0) : inp.value;
-      if(grp==="sleep") c2.sleep.ok = !!c2.sleep.done;   // 早睡完成 = 打卡勾选
+      if(grp==="sleep"){ c2.sleep.done = !!(c2.sleep.bed && c2.sleep.wake); updateSleepInfo(c2); }   // 填了入睡+起床即算"好好睡觉"完成
       if(grp==="move"){ c2.move.done = ((c2.move.sports&&c2.move.sports.length>0) || (c2.move.rope||0)>=DAILY_GOALS.jumpRope); }
       DB.checkins[dateStr]=c2; save();                    // 自动保存，孩子勾了就存
       const live=document.getElementById("live-points");
@@ -292,6 +323,8 @@ function renderToday(dateStr){
 
   const _bfn=(c.eat.bf||[]).length; const _bc=document.getElementById("bfCount"); if(_bc) _bc.textContent= _bfn>=3?"🎉 已得 +1 分":`还差 ${3-_bfn} 项`;
   const _sn=(c.move.sports||[]).length; const _sc=document.getElementById("sportCount"); if(_sc) _sc.textContent= _sn>0?"🎉 已得 +3 分":"";
+  if(c.sleep.bed && c.sleep.wake) c.sleep.done=true;
+  updateSleepInfo(c);
 
   const selfInput=document.getElementById("selfInput");
   const addSelf=()=>{
@@ -334,7 +367,7 @@ function renderToday(dateStr){
 
   document.getElementById("saveToday").addEventListener("click", ()=>{
     if(!DB.checkins[dateStr]) DB.checkins[dateStr]={eat:{},sleep:{},move:{},study:{},self:[]};
-    const s=DB.checkins[dateStr].sleep; s.ok=!!s.done;
+    const s=DB.checkins[dateStr].sleep; s.done=!!(s.bed&&s.wake);
     save(); renderStats();
     const tip=document.getElementById("savedTip");
     tip.textContent="✅ 已保存！"+fmtDate(dateStr);
@@ -568,6 +601,7 @@ function renderMilestone(){
 
   let rewards=REWARDS.map(r=>`<tr><td><b>${r.need} 分</b></td><td>${r.text}</td></tr>`).join("");
   let rules=Object.entries(POINTS).map(([k,v])=>`<li>${labelOf(k)}：+${v} 分</li>`).join("");
+  let sleepRules=`<li>😴 睡觉打分：早睡(≤${SLEEP.earlyCutoff})+睡够(≥${SLEEP.goalHours}h)= <b>${SLEEP.scores.earlyEnough} 分(满分)</b>；早睡短=${SLEEP.scores.earlyShort}；晚睡睡够=${SLEEP.scores.lateEnough}；晚睡短=${SLEEP.scores.lateShort}</li>`;
 
   sec.innerHTML=`
     <h2 class="sec">🌟 成长里程碑</h2>
@@ -592,14 +626,14 @@ function renderMilestone(){
       <div class="badge-row" id="badgeWall"></div>
     </div>
     <div class="card"><h3>💎 积分体系</h3>
-      <ul class="clean">${rules}</ul>
+      <ul class="clean">${rules}${sleepRules}</ul>
       <h4 style="margin:10px 0 4px">积分兑换</h4>
       <table class="tbl"><tr><th>需要</th><th>奖励</th></tr>${rewards}</table>
       <p class="muted">当前累计积分：<b id="ms-total">${totalPoints()}</b> 分</p>
     </div>`;
   renderBadges(document.getElementById("badgeWall"));
 }
-function labelOf(k){ return {eatWell:"好好吃饭(早餐3项)",drinkWater:"好好喝水",sleepBefore21:"21:30 前睡觉",jumpRope50:"跳绳 50 个以上",moveAny:"做了运动",englishRead15:"英语阅读 15 分钟",finishHomework:"完成作业",germanReview:"德语单词复习",examPerfect:"考试全对",weeklyReview:"每周周看板复盘"}[k]||k; }
+function labelOf(k){ return {eatWell:"好好吃饭(早餐3项)",drinkWater:"好好喝水",jumpRope50:"跳绳 50 个以上",moveAny:"做了运动",englishRead15:"英语阅读 15 分钟",finishHomework:"完成作业",germanReview:"德语单词复习",examPerfect:"考试全对",weeklyReview:"每周周看板复盘"}[k]||k; }
 
 /* ---- 专属徽章（基于现有数据计算） ---- */
 function computeBadges(){
