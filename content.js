@@ -30,7 +30,6 @@ const DAILY_GOALS = {
 const POINTS = {
   eatWell: 1,        // 好好吃饭：早餐选够 3 项（eat.bf 数量 ≥3）即 +1
   drinkWater: 1,     // 好好喝水（eat.waterOk）
-  sleepBefore21: 2,   // 21:30 前睡觉（sleep.done，早睡打卡）
   jumpRope50: 2,      // 每天跳绳 50 个以上
   moveAny: 3,         // 任意运动：跑步/仰卧起坐/乒乓球/其他，做了就 +3（move.sports 非空）
   englishRead15: 1,   // 每天英语阅读 15 分钟
@@ -38,6 +37,20 @@ const POINTS = {
   germanReview: 2,    // 每天德语单词复习
   examPerfect: 5,     // 考试全对（+5，单项高分项）
   weeklyReview: 5     // 每周完成周看板复盘
+};
+
+/* ============ 睡觉打分（自选入睡/起床时间 → 算时长 → 综合评分） ============
+   评分矩阵：早睡(≤ earlyCutoff) × 睡够(≥ goalHours) 四档
+   早睡且睡够 = 满分；其余三档递减，鼓励孩子早点上床 + 睡够 */
+const SLEEP = {
+  earlyCutoff: "21:30",   // 入睡时间 ≤ 此值算"早睡"
+  goalHours: 9.5,         // 科学睡眠时长阈值（小时）；8 岁建议 9–11 小时
+  scores: {
+    earlyEnough: 3,  // 早睡 + 睡够科学时间 → 满分
+    earlyShort: 2,   // 早睡但时间短
+    lateEnough: 1,   // 晚睡但睡够
+    lateShort: 0     // 晚睡且时间短（最差）
+  }
 };
 
 /* ============ 积分等级（8 级阶梯） ============
