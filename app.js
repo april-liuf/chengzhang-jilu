@@ -89,6 +89,25 @@ function sleepCategory(c){
   if(!early && enough) return {key:"lateEnough", pts:SLEEP.scores.lateEnough, label:"晚睡但睡够", desc:"睡得久，但晚了一点"};
   return {key:"lateShort", pts:SLEEP.scores.lateShort, label:"晚睡且时间短", desc:"要加油，早点上床多睡会儿"};
 }
+/* 睡眠质量统计：遍历所有打卡日，按四档矩阵累计 */
+function sleepQualityStats(){
+  const s={earlyEnough:0, earlyShort:0, lateEnough:0, lateShort:0, total:0};
+  for(const k in DB.checkins){
+    const c=DB.checkins[k];
+    if(!(c&&c.sleep&&c.sleep.done)) continue;
+    s.total++;
+    const cat=sleepCategory(c); if(cat) s[cat.key]++;
+  }
+  return s;
+}
+/* 连续“早睡+睡够”满分天数（真正的睡眠质量连续 streak） */
+function fullStreak(){
+  let streak=0, cur=todayStr();
+  const isFull=c=> c&&c.sleep&&c.sleep.done&&sleepCategory(c)&&sleepCategory(c).key==="earlyEnough";
+  if(!isFull(DB.checkins[cur])) cur=addDays(cur,-1);
+  while(isFull(DB.checkins[cur])){ streak++; cur=addDays(cur,-1); }
+  return streak;
+}
 function updateSleepInfo(c){
   const info=document.getElementById("sleepInfo");
   const score=document.getElementById("sleepScore");
@@ -619,10 +638,17 @@ function togglePomo(){
 }
 
 /* ================= 成长里程碑 ================= */
+function sleepBar(label, n, total, color){
+  const pct = total>0 ? Math.round(n/total*100) : 0;
+  return `<div style="margin:8px 0">
+    <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px"><span>${label}</span><b>${n} 天 · ${pct}%</b></div>
+    <div style="height:9px;background:#EDEDF2;border-radius:6px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${color};border-radius:6px"></div></div>
+  </div>`;
+}
 function renderMilestone(){
   const sec=document.getElementById("milestone");
-  const ms=moveStreak(), ss=sleepStreak(), rd=countDays(c=>c.study&&c.study.english), mt=countDays(c=>c.study&&c.study.math), gw=Object.keys(DB.leitner).length;
-  const valOf={ "🏃 运动":ms, "📚 阅读":rd, "🔢 数学":mt, "💤 睡眠":ss, "📝 德语":gw };
+  const ms=moveStreak(), ss=sleepStreak(), fs=fullStreak(), sq=sleepQualityStats(), rd=countDays(c=>c.study&&c.study.english), mt=countDays(c=>c.study&&c.study.math), gw=Object.keys(DB.leitner).length;
+  const valOf={ "🏃 运动":ms, "📚 阅读":rd, "🔢 数学":mt, "💤 睡眠":sq.earlyEnough, "📝 德语":gw };
   const thr={ "🏃 运动":[7,21,50], "📚 阅读":[5,10,20], "🔢 数学":[50,100,200], "💤 睡眠":[7,21,50], "📝 德语":[50,100,200] };
   let rows=ACHIEVEMENTS.map(a=>{
     const v=valOf[a.cat]||0; const [b,s,g]=thr[a.cat];
@@ -653,8 +679,18 @@ function renderMilestone(){
     </div>
     <h2 class="sec" style="font-size:18px">🏆 成就墙</h2>
     ${rows}
+    <div class="card"><h3>💤 睡眠质量统计</h3>
+      <p class="muted">按「早睡(≤${SLEEP.earlyCutoff}) × 睡够(≥${SLEEP.goalHours}h)」四档，统计已打卡的 <b>${sq.total}</b> 天：</p>
+      <div style="margin-top:6px">
+        ${sleepBar("🌟 早睡+睡够（满分）", sq.earlyEnough, sq.total, "#27AE60")}
+        ${sleepBar("🌙 早睡但时间短", sq.earlyShort, sq.total, "#F2C94C")}
+        ${sleepBar("☀️ 晚睡但睡够", sq.lateEnough, sq.total, "#56A0E8")}
+        ${sleepBar("⚠️ 晚睡且时间短", sq.lateShort, sq.total, "#EB5757")}
+      </div>
+      <p class="muted" style="margin-top:10px">📅 连续打卡 <b>${ss}</b> 天 · 🌟 连续满分 <b>${fs}</b> 天 · 累计满分 <b>${sq.earlyEnough}</b> 天</p>
+    </div>
     <div class="card"><h3>🏅 专属徽章</h3>
-      <p class="muted">单项做到位，就能点亮一枚徽章。集齐六枚，就是全能小超人！</p>
+      <p class="muted">单项做到位，就能点亮一枚徽章。集齐全部门，就是全能小超人！</p>
       <div class="badge-row" id="badgeWall"></div>
     </div>
     <div class="card"><h3>💎 积分体系</h3>
@@ -672,6 +708,7 @@ function computeBadges(){
   const vals = {
     moveStreak: moveStreak(),
     sleepStreak: sleepStreak(),
+    sleepFullStreak: fullStreak(),
     englishDays: countDays(c=>c.study&&c.study.english),
     germanWords: Object.keys(DB.leitner).length,
     eatDays: countDays(c=>eatDone(c)),
