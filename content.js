@@ -66,7 +66,8 @@ const LEVEL_NAMES = ["萌芽小超人","成长小超人","活力小超人","坚�
    tiers = [铜, 银, 金] 达成阈值；src 为计算数据源（见 app.js computeBadges）。 */
 const BADGES = [
   { id:"rope",    icon:"🪢", name:"跳绳小将",  tiers:[7,21,50],   src:"moveStreak",  label:"连续跳绳" },
-  { id:"sleep",   icon:"💤", name:"早睡星人",  tiers:[7,21,50],   src:"sleepStreak", label:"连续早睡" },
+  { id:"sleep",   icon:"💤", name:"早睡星人",  tiers:[7,21,50],   src:"sleepStreak",    label:"连续睡眠打卡" },
+  { id:"sleepFull", icon:"🌙", name:"睡眠满分星人", tiers:[7,21,50], src:"sleepFullStreak", label:"连续满分睡眠" },
   { id:"english", icon:"📚", name:"英语阅读侠", tiers:[10,30,60],  src:"englishDays", label:"英语阅读天数" },
   { id:"german",  icon:"🇩🇪", name:"德语达人",  tiers:[20,50,100], src:"germanWords", label:"已学德语词" },
   { id:"eat",     icon:"🍎", name:"健康饮食家", tiers:[14,30,60],  src:"eatDays",     label:"好好吃饭天数" },
@@ -395,7 +396,7 @@ const ACHIEVEMENTS = [
   { cat: "🏃 运动", bronze: "连续跳绳 7 天", silver: "连续跳绳 21 天", gold: "连续跳绳 50 天" },
   { cat: "📚 阅读", bronze: "读完 5 本书", silver: "读完 10 本书", gold: "读完 20 本书" },
   { cat: "🔢 数学", bronze: "完成 50 道题", silver: "完成 100 道题", gold: "完成 200 道题" },
-  { cat: "💤 睡眠", bronze: "连续 7 天 21 点前睡", silver: "连续 21 天 21 点前睡", gold: "连续 50 天 21 点前睡" },
+  { cat: "💤 睡眠", bronze: "7 天 早睡+睡够（满分）", silver: "21 天 早睡+睡够", gold: "50 天 早睡+睡够" },
   { cat: "📝 德语", bronze: "学会 50 个单词", silver: "学会 100 个单词", gold: "学会 200 个单词" }
 ];
 
