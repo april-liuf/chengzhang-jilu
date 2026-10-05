@@ -1,0 +1,15 @@
+{
+  "name": "成长记录",
+  "short_name": "成长记录",
+  "description": "儿子专属成长辅导：吃睡动打卡、学习天地、运动、时间管理",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFF7ED",
+  "theme_color": "#2D9CDB",
+  "icons": [
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" }
+  ]
+}
