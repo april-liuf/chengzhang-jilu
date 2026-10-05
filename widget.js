@@ -37,7 +37,7 @@ function dayPoints(c){
   if(!c) return 0;
   let p=0;
   if(c.eat && c.eat.done) p+=POINTS.eatWell;
-  if(c.sleep && c.sleep.ok) p+=POINTS.sleepBefore21;
+  const sc=sleepCategory(c); if(sc) p+=sc.pts;
   if(c.move && c.move.done && (c.move.rope||0)>=DAILY_GOALS.jumpRope) p+=POINTS.jumpRope50;
   if(c.study && c.study.english) p+=POINTS.englishRead15;
   if(c.study && c.study.homework) p+=POINTS.finishHomework;
@@ -46,6 +46,22 @@ function dayPoints(c){
 }
 function totalPoints(){ let t=0; for(const k in DB.checkins) t+=dayPoints(DB.checkins[k]); if(DB.weekly) for(const k in DB.weekly) if(DB.weekly[k].reviewed) t+=POINTS.weeklyReview; return t; }
 
+function sleepMinutes(bed, wake){
+  if(!bed||!wake) return null;
+  const p=s=>{ const a=(s||"").split(":").map(Number); return (a[0]||0)*60+(a[1]||0); };
+  const b=p(bed), w=p(wake); if(isNaN(b)||isNaN(w)) return null;
+  return ((w-b)%1440+1440)%1440;
+}
+function sleepCategory(c){
+  if(!c||!c.sleep) return null;
+  const d=sleepMinutes(c.sleep.bed, c.sleep.wake); if(d===null) return null;
+  const early = (c.sleep.bed||"23:59") <= SLEEP.earlyCutoff;
+  const enough = d/60 >= SLEEP.goalHours;
+  if(early && enough) return {key:"earlyEnough", pts:SLEEP.scores.earlyEnough, label:"早睡+睡够"};
+  if(early && !enough) return {key:"earlyShort", pts:SLEEP.scores.earlyShort, label:"早睡但短"};
+  if(!early && enough) return {key:"lateEnough", pts:SLEEP.scores.lateEnough, label:"晚睡但够"};
+  return {key:"lateShort", pts:SLEEP.scores.lateShort, label:"晚睡且短"};
+}
 function renderWidget(){
   const hr=new Date().getHours();
   const greetT = hr<11?"早":(hr<18?"下午":"晚");
@@ -55,15 +71,15 @@ function renderWidget(){
   document.getElementById("wStats").innerHTML = `
     <div class="w-stat"><div class="num">${dayStreak()}</div><div class="lbl">连续打卡</div></div>
     <div class="w-stat"><div class="num">${weekDoneCount()}/${weekTotalDays()}</div><div class="lbl">本周三件事</div></div>
-    <div class="w-stat"><div class="num">${totalPoints()}</div><div class="lbl">自信币</div></div>
+    <div class="w-stat"><div class="num">${totalPoints()}</div><div class="lbl">积分</div></div>
     <div class="w-stat"><div class="num">${du>0?du:"0"}</div><div class="lbl">距开学</div></div>
   `;
 
   const c = DB.checkins[todayStr()] || {eat:{},sleep:{},move:{}};
   if(!c.eat) c.eat={}; if(!c.sleep) c.sleep={}; if(!c.move) c.move={};
+  if(c.sleep.bed && c.sleep.wake) c.sleep.done=true;
   const things=[
     {k:"eat.done", icon:"🍎", t:"好好吃饭", cls:"eat", sub:`喝水 ${c.eat.water||0} 杯`},
-    {k:"sleep.done", icon:"😴", t:"早点睡觉", cls:"sleep", sub:`${c.sleep.bed||"21:00"} 睡`},
     {k:"move.done", icon:"🏃", t:"动一动", cls:"move", sub:`跳绳 ${c.move.rope||0} 个`}
   ];
   document.getElementById("wThree").innerHTML = things.map(th=>{
@@ -73,7 +89,7 @@ function renderWidget(){
       <input type="checkbox" data-k="${th.k}" ${checked}>
       <div class="t">${th.icon} ${th.t}<div class="d">${th.sub}</div></div>
     </label>`;
-  }).join("");
+  }).join("") + sleepWidget(c);
 
   document.getElementById("wDone").style.display = allThree(c) ? "block" : "none";
 
@@ -81,14 +97,23 @@ function renderWidget(){
     inp.addEventListener("change", ()=>{
       const c2 = DB.checkins[todayStr()] || {eat:{},sleep:{},move:{}};
       if(!c2.eat) c2.eat={}; if(!c2.sleep) c2.sleep={}; if(!c2.move) c2.move={};
-      const [grp,key] = inp.dataset.k.split(".");
-      c2[grp][key] = inp.checked;
-      if(grp==="sleep") c2.sleep.ok = !!c2.sleep.done;
+      const k = inp.dataset.k;
+      if(inp.type==="checkbox"){ const [grp,key]=k.split("."); c2[grp][key]=inp.checked; }
+      else { const [grp,key]=k.split("."); c2[grp][key]=inp.value; if(grp==="sleep") c2.sleep.done=!!(c2.sleep.bed&&c2.sleep.wake); }
       DB.checkins[todayStr()] = c2;
       save();
       renderWidget();
     });
   });
+}
+function sleepWidget(c){
+  const sc=sleepCategory(c);
+  const d=sleepMinutes(c.sleep.bed, c.sleep.wake);
+  const dur = d===null? "" : ` · ${(Math.floor(d/60))}h${d%60}m`;
+  return `<div class="w-thing sleep">
+    <div class="t">😴 好好睡觉<div class="d">🛏<input type="time" class="w-time" data-k="sleep.bed" value="${c.sleep.bed||"21:00"}"> ⏰<input type="time" class="w-time" data-k="sleep.wake" value="${c.sleep.wake||"07:00"}">${dur}</div></div>
+    <div class="ws-core">${sc?("🌟 "+sc.pts+" 分 · "+sc.label):"填时间自动算分"}</div>
+  </div>`;
 }
 
 window.addEventListener("DOMContentLoaded", renderWidget);
