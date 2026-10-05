@@ -42,6 +42,7 @@ function dayPoints(c){
   if(c.study && c.study.english) p+=POINTS.englishRead15;
   if(c.study && c.study.homework) p+=POINTS.finishHomework;
   if(c.study && c.study.german) p+=POINTS.germanReview;
+  if(c.chore && c.chore.list && c.chore.list.length) p += c.chore.list.length * POINTS.chore;
   return p;
 }
 function totalPoints(){ let t=0; for(const k in DB.checkins) t+=dayPoints(DB.checkins[k]); if(DB.weekly) for(const k in DB.weekly) if(DB.weekly[k].reviewed) t+=POINTS.weeklyReview; return t; }
