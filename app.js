@@ -59,6 +59,7 @@ function dayPoints(c){
   const sc=sleepCategory(c); if(sc) p+=sc.pts;
   if(c.move && c.move.done && (c.move.rope||0)>=DAILY_GOALS.jumpRope) p+=POINTS.jumpRope50;
   if(c.move && c.move.sports && c.move.sports.length) p+=POINTS.moveAny;
+  if(c.chore && c.chore.list && c.chore.list.length) p += c.chore.list.length * POINTS.chore;
   if(c.study && c.study.english) p+=POINTS.englishRead15;
   if(c.study && c.study.homework) p+=POINTS.finishHomework;
   if(c.study && c.study.german) p+=POINTS.germanReview;
@@ -151,8 +152,8 @@ function show(id){
 /* ================= 今日三件事（乐乐式单屏英雄页） ================= */
 function renderToday(dateStr){
   dateStr = dateStr || todayStr();
-  const c = DB.checkins[dateStr] || {eat:{},sleep:{},move:{},study:{},self:[],happy:[]};
-  if(!c.eat) c.eat={}; if(!c.sleep) c.sleep={}; if(!c.move) c.move={}; if(!c.study) c.study={}; if(!c.self) c.self=[]; if(!c.happy) c.happy=[];
+  const c = DB.checkins[dateStr] || {eat:{},sleep:{},move:{},study:{},chore:{},self:[],happy:[]};
+  if(!c.eat) c.eat={}; if(!c.sleep) c.sleep={}; if(!c.move) c.move={}; if(!c.study) c.study={}; if(!c.chore) c.chore={}; if(!c.self) c.self=[]; if(!c.happy) c.happy=[];
   const sec = document.getElementById("today");
 
   const hr=new Date().getHours();
@@ -246,6 +247,19 @@ function renderToday(dateStr){
       <div class="note-line">💡 妈妈出差也没关系——选上面的日期，随时回来补打卡 ✅</div>
     </div>
 
+    <div class="card chore">
+      <div class="today-head">
+        <span class="pill">🧹 劳动小能手</span>
+        <span class="muted">做了就点一下，每项 +1 分</span>
+        <span class="bf-count" id="choreCount"></span>
+      </div>
+      <div class="bf">
+        <span class="bf-note">👶 小孩子能做的劳动，挑今天做了的打钩（以后想加项目，告诉妈妈往里加）</span>
+        <div class="chips">${CHORES.map(ch=>`<button type="button" class="chip ${ (c.chore&&c.chore.list||[]).includes(ch.id)?"on":"" }" data-chore="${ch.id}">${ch.icon} ${ch.name}</button>`).join("")}</div>
+      </div>
+      <div class="bf-tip" id="choreTip"></div>
+    </div>
+
     <div class="card happy">
       <h3>😊 今天的 Happy Things</h3>
       <div id="happyList">${happyHtml}</div>
@@ -321,8 +335,26 @@ function renderToday(dateStr){
     });
   });
 
+  sec.querySelectorAll(".chip[data-chore]").forEach(ch=>{
+    ch.addEventListener("click",()=>{
+      const c9 = DB.checkins[dateStr] || {eat:{},sleep:{},move:{},study:{},chore:{}};
+      if(!c9.chore)c9.chore={}; if(!c9.chore.list)c9.chore.list=[];
+      const id=ch.dataset.chore; const arr=c9.chore.list; const i=arr.indexOf(id);
+      if(i>=0) arr.splice(i,1); else arr.push(id);
+      DB.checkins[dateStr]=c9; save();
+      ch.classList.toggle("on");
+      const n=arr.length;
+      const cc=document.getElementById("choreCount"); if(cc) cc.textContent= n>0?`🎉 已得 +${n} 分`:"";
+      const ct=document.getElementById("choreTip"); if(ct) ct.textContent= n>0?`今天做了 ${n} 项劳动，太棒了！`:"选一项劳动试试看～";
+      const live=document.getElementById("live-points"); if(live) live.textContent=dayPoints(c9)+" 分";
+      renderStats();
+    });
+  });
+
   const _bfn=(c.eat.bf||[]).length; const _bc=document.getElementById("bfCount"); if(_bc) _bc.textContent= _bfn>=3?"🎉 已得 +1 分":`还差 ${3-_bfn} 项`;
   const _sn=(c.move.sports||[]).length; const _sc=document.getElementById("sportCount"); if(_sc) _sc.textContent= _sn>0?"🎉 已得 +3 分":"";
+  const _cn=(c.chore&&c.chore.list||[]).length; const _cc=document.getElementById("choreCount"); if(_cc) _cc.textContent= _cn>0?`🎉 已得 +${_cn} 分`:"";
+  const _ct=document.getElementById("choreTip"); if(_ct) _ct.textContent= _cn>0?`今天做了 ${_cn} 项劳动，太棒了！`:"选一项劳动试试看～";
   if(c.sleep.bed && c.sleep.wake) c.sleep.done=true;
   updateSleepInfo(c);
 
@@ -633,7 +665,7 @@ function renderMilestone(){
     </div>`;
   renderBadges(document.getElementById("badgeWall"));
 }
-function labelOf(k){ return {eatWell:"好好吃饭(早餐3项)",drinkWater:"好好喝水",jumpRope50:"跳绳 50 个以上",moveAny:"做了运动",englishRead15:"英语阅读 15 分钟",finishHomework:"完成作业",germanReview:"德语单词复习",examPerfect:"考试全对",weeklyReview:"每周周看板复盘"}[k]||k; }
+function labelOf(k){ return {eatWell:"好好吃饭(早餐3项)",drinkWater:"好好喝水",jumpRope50:"跳绳 50 个以上",moveAny:"做了运动",englishRead15:"英语阅读 15 分钟",finishHomework:"完成作业",germanReview:"德语单词复习",examPerfect:"考试全对",weeklyReview:"每周周看板复盘",chore:"劳动(每项+1分)"}[k]||k; }
 
 /* ---- 专属徽章（基于现有数据计算） ---- */
 function computeBadges(){
@@ -643,7 +675,8 @@ function computeBadges(){
     englishDays: countDays(c=>c.study&&c.study.english),
     germanWords: Object.keys(DB.leitner).length,
     eatDays: countDays(c=>eatDone(c)),
-    examCount: countDays(c=>c.study&&c.study.exam)
+    examCount: countDays(c=>c.study&&c.study.exam),
+    choreCount: Object.values(DB.checkins).reduce((s,c)=>s+((c.chore&&c.chore.list)?c.chore.list.length:0),0)
   };
   return BADGES.map(b=>{
     const v=vals[b.src]||0;
