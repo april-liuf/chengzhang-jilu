@@ -13,7 +13,7 @@ function load(){
     }
   }catch(e){}
   const def = { checkins:{}, weekly:{}, leitner:{}, diet:[] };
-  /* 本地预览（localhost/127.0.0.1）首次打开自动填入示例，方便妈妈看效果；iPad(192.168.1.20)不受影响 */
+  /* 本地预览（localhost/127.0.0.1）首次打开自动填入示例，方便妈妈看效果；局域网 iPad(192.168.1.33)不受影响 */
   if(location.hostname==="localhost"||location.hostname==="127.0.0.1"){
     def.checkins["2026-09-19"] = {
       eat:    { done:true, waterOk:true, water:4, bf:["daoxiaomian","egg_b","soymilk","veg"] },
