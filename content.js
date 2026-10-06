@@ -11,11 +11,107 @@ const SITE = {
   childGrade: "三年级",
   school: "北京海淀外国语学校 · 德语双语班（德语+英语）",
   motto: "你不需要一天就变好，只需要今天比昨天多懂一点点。🌱",  // 首页英雄区引用
-  version: "v2.1 · 2026年10月",
+  version: "v2.2 · 2026年10月",
   startDate: "2026-08-04",        // 成长站启用日（用于“第 N 天”计数；按实际启用日改）
-  schoolStart: "2026-09-01",      // 开学日（9 月 1 日开学；已开学后首页自动显示“已开学 X 天”）
-  weeklyTheme: "开学第三周 · 习惯巩固与节奏稳定"   // 每周主题，按实际阶段改
+  schoolStart: "2026-09-01"       // 开学日（9 月 1 日开学；已开学后首页自动显示“已开学 X 天”）
 };
+
+/* =========================================================
+   校历 & 每周主题（按日期自动计算，不用手动改）
+   ---------------------------------------------------------
+   首页那条「📌 开学第 N 周 · …」就是从这里来的：
+   · 学期内：以开学那一周的周一为「第 1 周」，按周一自动进位，
+     每周自动取 weekPlan 里对应的那一条。
+   · 假期内：按 terms 里 kind:"break" 的固定文案显示。
+   · 开学前：自动显示开学倒计时 + 准备提示。
+   ⚠️ 日期以学校正式校历为准。学校发了新校历，只改下面
+      terms 里的 start / end 两行即可，其它都不用动。
+   ========================================================= */
+const CALENDAR = {
+  terms: [
+    { kind:"term",  name:"三年级上 · 秋季学期", start:"2026-09-01", end:"2027-01-19" },
+    { kind:"break", name:"寒假",               start:"2027-01-20", end:"2027-02-21",
+      theme:{ title:"寒假 · 松而不散", focus:"每天动一动、读一点，先把作息保住；别把学习挂嘴边" } },
+    { kind:"term",  name:"三年级下 · 春季学期", start:"2027-02-22", end:"2027-07-09" },
+    { kind:"break", name:"暑假",               start:"2027-07-10", end:"2027-08-31",
+      theme:{ title:"暑假 · 保住底盘", focus:"三件事挑两件保持不断，开学前一周把作息调回来" } }
+  ],
+
+  /* 开学前（不在任何学期区间内时）显示 */
+  before: { title:"开学准备", focus:"先把作息往前挪：每天提前 15 分钟睡，开学不痛苦" },
+
+  /* 学期内的 21 周节奏：启动 → 稳定 → 期中 → 抗寒 → 冲刺 → 收尾。
+     两个学期通用；学期超过 21 周时，超出的周沿用第 21 条。 */
+  weekPlan: [
+    { title:"先把节奏搭起来",     focus:"不追完美，每天三件事打上勾就是赢；漏一天不补，第二天照常" },
+    { title:"找出最常漏的那件事", focus:"大概率是运动。本周只补这一件，别一次全上" },
+    { title:"不用提醒也能打卡",   focus:"家长只记录不催，把「提醒」的主动权还给他" },
+    { title:"给运动加点乐子",     focus:"跳绳之外加一样他真喜欢的：球类、跑酷、游泳都行" },
+    { title:"学习节奏上台阶",     focus:"英语阅读固定 15 分钟；作业不拖到睡前才动笔" },
+    { title:"守住 21:00 的睡眠",  focus:"晚睡会连锁拖垮吃和动。本周只盯入睡时间，其它先不管" },
+    { title:"第一次月度复盘",     focus:"翻一个月的数据，找出进步最大的一项，当着他的面说一遍" },
+    { title:"跳绳目标 +20 个",    focus:"只加一项，其它保持不动。加码太多会全盘崩" },
+    { title:"学习习惯再加一层",   focus:"错题本或预习，选一个开始——不要两个一起上" },
+    { title:"期中准备：学习优先", focus:"运动和睡眠不许掉，学习时间适当加量" },
+    { title:"期中周：稳住不崩",   focus:"只保三件事不断，不加任何新目标" },
+    { title:"看期中反馈调方向",   focus:"哪科弱补哪科，别全科平均用力" },
+    { title:"冬天也要动",         focus:"室内运动上线：仰卧起坐、平板支撑、乒乓球" },
+    { title:"别在冬天崩盘",       focus:"天冷是最容易垮的两周：作息和运动各保一项就好" },
+    { title:"期末倒计时",         focus:"复习计划写出来贴墙上，别只放在脑子里" },
+    { title:"复习：每天一小块",   focus:"分科目轮转，拒绝突击；每次不超过 40 分钟" },
+    { title:"复习：只做错题",     focus:"不刷新题，把错过的题再做一遍，错题本翻三遍" },
+    { title:"冲刺：作息不许变",   focus:"越到考前越要早睡，熬夜换不来分数" },
+    { title:"把不懂的列出来",     focus:"集中找老师问，一次问完，别攒到最后一天" },
+    { title:"期末周：全力稳住",   focus:"三件事不断就行，其它一切给考试让路" },
+    { title:"一起复盘这学期",     focus:"看成长曲线，告诉他哪一项进步最大，说一句「你长高了」" }
+  ]
+};
+
+/* ---------- 自动周主题（首页 / 小组件共用，不用手动改） ---------- */
+function schoolWeekInfo(){
+  const cal = CALENDAR;
+  if(!cal || !cal.terms || !cal.terms.length) return null;
+  const today = todayStr();
+  const plan = cal.weekPlan || [];
+
+  /* 1) 当前落在哪个学期 / 假期 */
+  let cur = null;
+  for(const t of cal.terms){ if(today >= t.start && today <= t.end){ cur = t; break; } }
+
+  /* 2) 不在任何区间内 → 显示下一个学期的开学倒计时 */
+  if(!cur){
+    const upcoming = cal.terms.filter(t=>t.start > today).sort((a,b)=>a.start.localeCompare(b.start))[0];
+    if(upcoming){
+      const d = daysUntil(upcoming.start);
+      const b = cal.before || {};
+      return { kind:"before", days:d,
+        banner:`距开学 ${d} 天 · ${b.title||"开学准备"}`,
+        focus:b.focus||"", extra:`${upcoming.name} · ${fmtDate(upcoming.start)}开学` };
+    }
+    const last = cal.terms[cal.terms.length-1];
+    return { kind:"after", banner:"假期模式", focus:"保持作息，三件事挑两件", extra:last.name };
+  }
+
+  /* 3) 假期 */
+  if(cur.kind === "break"){
+    const tm = cur.theme || {};
+    const left = daysUntil(addDays(cur.end,1));
+    return { kind:"break", term:cur.name,
+      banner:tm.title || cur.name, focus:tm.focus || "", extra:`${cur.name} · 距开学 ${left} 天` };
+  }
+
+  /* 4) 学期内第 N 周：以「开学那一周的周一」为第 1 周 */
+  const firstMon = mondayOf(cur.start);
+  const curMon   = mondayOf(today);
+  const wk = Math.round((new Date(curMon+"T00:00:00") - new Date(firstMon+"T00:00:00"))/86400000/7) + 1;
+  const idx = Math.max(0, Math.min(wk, plan.length) - 1);
+  const it  = plan[idx] || { title:"学期进行中", focus:"" };
+  const left = daysUntil(addDays(cur.end,1));
+  return { kind:"term", term:cur.name, week:wk, total:plan.length,
+    banner:`开学第 ${wk} 周 · ${it.title}`,
+    focus:it.focus || "",
+    extra:`${cur.name} · 学期第 ${wk}/${plan.length} 周 · 距放假 ${left} 天` };
+}
 
 /* 每日三件事（吃·睡·动）的目标设定 */
 const DAILY_GOALS = {
