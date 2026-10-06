@@ -1065,7 +1065,22 @@ function wireDataTools(){
   if(im) im.onchange=e=>{
     const f=e.target.files[0]; if(!f) return;
     const r=new FileReader();
-    r.onload=()=>{ try{ const d=JSON.parse(r.result); if(d&&d.checkins){ DB=d; save(); location.reload(); } }catch(err){ alert("文件格式不对，导入失败"); } };
+    r.onload=()=>{
+      try{
+        const d=JSON.parse(r.result);
+        if(d && d.checkins){
+          const oldDays=Object.keys(d.checkins).length;
+          // 合并：当前(新链接)数据优先，旧数据补回缺失日期，避免冲掉已有记录
+          DB.checkins=Object.assign({}, d.checkins, DB.checkins);
+          if(d.weekly)  DB.weekly =Object.assign({}, d.weekly, DB.weekly);
+          if(d.leitner) DB.leitner=Object.assign({}, d.leitner, DB.leitner);
+          if(Array.isArray(d.diet)&&d.diet.length) DB.diet=d.diet.concat(DB.diet.filter(x=>!d.diet.includes(x)));
+          save();
+          alert("已合并导入 "+oldDays+" 天打卡记录 ✅");
+          location.reload();
+        } else { alert("文件里没有打卡记录，导入失败"); }
+      }catch(err){ alert("文件格式不对，导入失败"); }
+    };
     r.readAsText(f);
   };
 }
