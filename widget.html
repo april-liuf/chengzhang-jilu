@@ -16,6 +16,9 @@
   .widget-header{text-align:center;}
   .widget-header .greet{font-size:22px;font-weight:800;color:var(--blue-d);}
   .widget-header .meta{font-size:13px;color:var(--muted);margin-top:4px;}
+  .w-theme{margin-top:10px;}
+  .w-theme .wt-b{display:inline-block;background:var(--blue);color:#fff;font-size:12px;font-weight:700;padding:5px 13px;border-radius:16px;}
+  .w-theme .wt-f{font-size:12px;color:var(--blue-d);font-weight:600;margin-top:6px;line-height:1.5;}
   .widget-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px;}
   .w-stat{background:#F7F9FF;border-radius:14px;padding:12px 6px;text-align:center;}
   .w-stat .num{font-size:24px;font-weight:800;color:var(--blue-d);line-height:1.1;}
@@ -43,6 +46,7 @@
   <div class="widget-card widget-header">
     <div class="greet" id="wGreet">⚡ 宝贝</div>
     <div class="meta" id="wMeta">今天</div>
+    <div class="w-theme" id="wTheme"></div>
     <div class="widget-stats" id="wStats"></div>
   </div>
   <div class="widget-card">
