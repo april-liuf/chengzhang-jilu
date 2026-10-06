@@ -846,6 +846,27 @@ function renderDiet(){
   const fRoles=F.roles.map(r=>`<tr>
     <td><b>${r.role}</b></td><td>${r.does}</td><td class="muted">${r.notDoes}</td></tr>`).join("");
 
+  /* ---- 燕麦粥备餐区块 ---- */
+  const oat=DIET.oatmeal;
+  const oaSteps=oat.steps.map(s=>`<div class="d-snack">
+    <div class="ico">${s.icon}</div>
+    <div style="flex:1"><b>${s.title}</b><div class="muted">${s.detail}</div></div></div>`).join("");
+  const oaDirLabel={up:"⬆️ 增加",down:"⬇️ 减少",same:"➖ 不变"};
+  const oaDirColor={up:"var(--green-d)",down:"var(--orange-d)",same:"var(--muted)"};
+  const oaChanges=oat.changes.map(c=>`<tr>
+    <td><b>${c.name}</b></td>
+    <td><b style="color:${oaDirColor[c.dir]}">${oaDirLabel[c.dir]}</b></td>
+    <td class="muted">${c.note}</td></tr>`).join("");
+  const oaSafety=oat.safety.map(s=>`<tr>
+    <td><b>${s.cond}</b></td><td>${s.req}</td></tr>`).join("");
+  const oaPitfalls=oat.pitfalls.map(p=>`<tr>
+    <td><b style="color:var(--red-d)">⚠️ ${p.wrong}</b></td>
+    <td><span style="color:var(--green-d)">✅ ${p.right}</span></td>
+    <td class="muted">${p.why}</td></tr>`).join("");
+  const oaWeekly=oat.weekly.map(w=>`<tr>
+    <td><b>${w.when}</b></td><td>${w.what}</td><td class="muted">${w.detail}</td></tr>`).join("");
+  const oaUpSteps=oat.upgrade.steps.map(s=>`<li>${s}</li>`).join("");
+
   sec.innerHTML=`
     <h2 class="sec">🍽️ 健康饮食 · 方案中心</h2>
 
@@ -871,6 +892,33 @@ function renderDiet(){
     <div class="card">
       <h3>⏰ 每日节奏</h3>
       ${flow}
+    </div>
+
+    <div class="card">
+      <h3>🥣 燕麦粥备餐指南</h3>
+      <p class="muted" style="color:var(--green-d)"><b>${oat.status}</b></p>
+      <p class="muted">💡 ${oat.why}</p>
+
+      <h4 style="margin:14px 0 4px">三步法：煮 → 冷 → 温</h4>
+      <div class="d-snacks">${oaSteps}</div>
+
+      <h4 style="margin:14px 0 4px">一夜之后，指标怎么变</h4>
+      <table class="tbl"><tr><th>指标</th><th>变化</th><th>说明</th></tr>${oaChanges}</table>
+      <p class="muted">📚 依据：${oat.evidence}</p>
+
+      <h4 style="margin:14px 0 4px">✅ 安全窗口</h4>
+      <table class="tbl"><tr><th>条件</th><th>要求</th></tr>${oaSafety}</table>
+
+      <h4 style="margin:14px 0 4px">⚠️ 5 个常见错误</h4>
+      <table class="tbl"><tr><th>别这样</th><th>这样做</th><th>为什么</th></tr>${oaPitfalls}</table>
+
+      <h4 style="margin:14px 0 4px">📅 每周固定流程（照做就行）</h4>
+      <table class="tbl"><tr><th>时间</th><th>做什么</th><th>备注</th></tr>${oaWeekly}</table>
+
+      <h4 style="margin:14px 0 4px">⬆️ ${oat.upgrade.title}</h4>
+      <ol class="clean">${oaUpSteps}</ol>
+      <p class="muted">✅ 好处：${oat.upgrade.pros}</p>
+      <p class="muted">💡 ${oat.upgrade.note}</p>
     </div>
 
     <div class="card">
