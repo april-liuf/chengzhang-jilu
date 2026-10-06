@@ -178,6 +178,8 @@ function renderToday(dateStr){
   const hr=new Date().getHours();
   const greetT = hr<11?"早":(hr<18?"下午":"晚");
   const dn = dayNumber();
+  /* 每周主题：按开学日自动计算（见 content.js 的 CALENDAR / schoolWeekInfo） */
+  const wi = (typeof schoolWeekInfo==="function" ? schoolWeekInfo() : null) || null;
 
   const selfHtml = c.self.length ? c.self.map((t,i)=>`
     <div class="self-item ${t.done?"done":""}" data-i="${i}">
@@ -205,7 +207,11 @@ function renderToday(dateStr){
       </div>
       <div class="level-banner">🏅 <span id="levelInfo">L1 萌芽小超人</span></div>
       <div class="level-wrap"><div class="level-bar" id="levelBar"></div></div>
-      <div class="theme-banner">📌 第 ${dn} 天 · ${escapeHtml(SITE.weeklyTheme)}</div>
+      <div class="theme-banner">📌 ${wi ? escapeHtml(wi.banner) : ("第 "+dn+" 天")}</div>
+      ${wi && (wi.focus||wi.extra) ? `<div class="theme-focus">
+        ${wi.focus ? `<span class="tf-main">💡 ${escapeHtml(wi.focus)}</span>` : ""}
+        ${wi.extra ? `<span class="tf-meta">${escapeHtml(wi.extra)}</span>` : ""}
+      </div>` : ""}
     </div>
 
     <div class="card">
