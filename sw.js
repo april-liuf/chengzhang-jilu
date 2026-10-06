@@ -1,4 +1,4 @@
-const CACHE = "growth-v1";
+const CACHE = "growth-v2";
 const FILES = [
   "index.html", "widget.html", "content.js", "styles.css", "app.js", "widget.js",
   "icon-512.png", "icon-192.png", "manifest.webmanifest"
