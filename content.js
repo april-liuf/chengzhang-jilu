@@ -141,7 +141,7 @@ const POINTS = {
    早睡且睡够 = 满分；其余三档递减，鼓励孩子早点上床 + 睡够 */
 const SLEEP = {
   earlyCutoff: "21:30",   // 入睡时间 ≤ 此值算"早睡"
-  goalHours: 9.5,         // 科学睡眠时长阈值（小时）；8 岁建议 9–11 小时
+  goalHours: 9,           // 科学睡眠时长阈值（小时）；8 岁建议 9–11 小时
   scores: {
     earlyEnough: 3,  // 早睡 + 睡够科学时间 → 满分
     earlyShort: 2,   // 早睡但时间短
