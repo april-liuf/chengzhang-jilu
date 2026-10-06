@@ -67,13 +67,24 @@ function renderWidget(){
   const hr=new Date().getHours();
   const greetT = hr<11?"早":(hr<18?"下午":"晚");
   document.getElementById("wGreet").textContent = `⚡ ${SITE.childName}，${greetT}好！`;
+  document.getElementById("wMeta").textContent = `第 ${dayNumber()} 天 · ${fmtDate(todayStr())}`;
+
+  /* 每周主题：与主站同一个函数（content.js 里的 schoolWeekInfo），按开学日自动算 */
+  const wi = (typeof schoolWeekInfo==="function" ? schoolWeekInfo() : null) || null;
+  const wTheme = document.getElementById("wTheme");
+  if(wTheme) wTheme.innerHTML = wi
+    ? `<div class="wt-b">📌 ${wi.banner}</div>${wi.focus?`<div class="wt-f">💡 ${wi.focus}</div>`:""}`
+    : "";
+
+  /* 第 4 格：开学前显示倒计时，开学后显示「已开学 N 天」（与主站一致） */
   const du = daysUntil(SITE.schoolStart);
-  document.getElementById("wMeta").textContent = `第 ${dayNumber()} 天 · ${du>0?"距开学 "+du+" 天":"开学啦 🎒"} · ${fmtDate(todayStr())}`;
+  const duNum = du>0 ? du : (du<0 ? -du : 0);
+  const duLbl = du>0 ? "距开学" : (du<0 ? "已开学" : "开学日");
   document.getElementById("wStats").innerHTML = `
     <div class="w-stat"><div class="num">${dayStreak()}</div><div class="lbl">连续打卡</div></div>
     <div class="w-stat"><div class="num">${weekDoneCount()}/${weekTotalDays()}</div><div class="lbl">本周三件事</div></div>
     <div class="w-stat"><div class="num">${totalPoints()}</div><div class="lbl">积分</div></div>
-    <div class="w-stat"><div class="num">${du>0?du:"0"}</div><div class="lbl">距开学</div></div>
+    <div class="w-stat"><div class="num">${duNum}</div><div class="lbl">${duLbl}</div></div>
   `;
 
   const c = DB.checkins[todayStr()] || {eat:{},sleep:{},move:{}};
