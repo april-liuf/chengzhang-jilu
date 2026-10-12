@@ -246,6 +246,11 @@ main.wrap{max-width:none;flex:1;margin-left:260px;padding:24px 24px 60px;min-wid
 /* 数据备份按钮 */
 .data-tools{display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap;}
 .data-tools .btn{padding:7px 13px;font-size:13px;}
+.sync-card{background:linear-gradient(135deg,#FFF3E0,#EAF6FF);border-radius:var(--radius);padding:14px 16px;margin:14px 0;box-shadow:var(--shadow);text-align:left;}
+.sync-title{font-size:15px;font-weight:800;color:var(--blue-d);margin-bottom:10px;}
+.sync-steps{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.s-step{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--ink);line-height:1.45;}
+.s-step span{flex:0 0 20px;height:20px;line-height:20px;text-align:center;background:var(--green);color:#fff;border-radius:50%;font-size:12px;font-weight:800;}
 
 /* ===== 健康饮食 · 方案中心 ===== */
 /* 餐盘 */
