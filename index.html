@@ -52,10 +52,19 @@
   <footer>
     「成长记录」—— 陪你慢慢长大 🌱<br>
     <span id="ver"></span> · 数据只保存在本机浏览器（离线可用）· 妈妈出差也能随时补打卡
-    <div class="data-tools">
-      <button class="btn ghost" id="exportData">⬇️ 备份数据</button>
-      <label class="btn ghost" for="importData" style="display:inline-block;cursor:pointer">⬆️ 恢复数据</label>
-      <input type="file" id="importData" accept="application/json" style="display:none">
+    <div class="sync-card">
+      <div class="sync-title">📲 换设备同步数据（手机 ↔ 电脑）</div>
+      <div class="sync-steps">
+        <div class="s-step"><span>1</span>在<b>常用设备</b>点「⬇️ 备份数据」，下载一份备份文件</div>
+        <div class="s-step"><span>2</span>用微信 / 邮箱把文件发到<b>另一台设备</b></div>
+        <div class="s-step"><span>3</span>另一台设备打开本链接 → 点「⬆️ 恢复数据」选文件 → 自动合并</div>
+      </div>
+      <div class="data-tools">
+        <button class="btn ghost" id="exportData">⬇️ 备份数据</button>
+        <label class="btn ghost" for="importData" style="display:inline-block;cursor:pointer">⬆️ 恢复数据</label>
+        <input type="file" id="importData" accept="application/json" style="display:none">
+      </div>
+      <div class="note-line">💡 数据只存在本机浏览器、不会自动上云。换手机 / 电脑 / 浏览器时，按上面三步导一次即可，不用重新打卡。</div>
     </div>
     <div class="note-line">📱 手机/iPad 使用：浏览器打开本页 → 点「分享」→「添加到主屏幕」，就能像 App 一样打卡。公网地址：<a href="https://april-liuf.github.io/chengzhang-jilu/" target="_blank" rel="noopener">april-liuf.github.io/chengzhang-jilu</a>（任意网络都能用）。</div>
     <div class="widget-entry">
