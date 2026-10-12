@@ -1114,6 +1114,7 @@ function wireDataTools(){
     const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
     a.download="成长记录-数据备份-"+todayStr()+".json"; a.click();
     URL.revokeObjectURL(a.href);
+    setTimeout(()=>alert("✅ 备份文件已下载！\n\n下一步：用微信或邮箱把这份 JSON 文件发到另一台设备，在另一台设备打开本链接后点「⬆️ 恢复数据」选它导入，数据就同步过去了。"),400);
   };
   const im=document.getElementById("importData");
   if(im) im.onchange=e=>{
